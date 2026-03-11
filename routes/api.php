@@ -8,35 +8,40 @@ use App\Http\Controllers\CupboardController;
 use App\Http\Controllers\PlaceController;
 
 
- // Test Route
-
+// Test Route
 Route::get('/test', function () {
     return response()->json(['message' => 'API working fine']);
 });
 
-//Authentication
 
+// Authentication
 Route::post('/login', [AuthController::class, 'login']);
 
 
-//Protected Routes (Require Login)
-
+// Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
 
     // Items
     Route::apiResource('items', ItemController::class);
 
-    // Cupboards
-    Route::apiResource('cupboards', CupboardController::class);
-    Route::get('/cupboards', [CupboardController::class, 'index']);
-     Route::post('/cupboards', [CupboardController::class, 'store'])
-        ->middleware('role:admin');
-
-    // Places
-    Route::apiResource('places', PlaceController::class);
-
     // Borrow System
     Route::post('/borrow', [BorrowController::class, 'borrow']);
     Route::post('/return', [BorrowController::class, 'returnItem']);
+
+    // Cupboards
+    Route::get('/cupboards', [CupboardController::class, 'index']);
+    Route::get('/cupboards/{id}', [CupboardController::class, 'show']);
+
+    Route::post('/cupboards', [CupboardController::class, 'store'])->middleware('role:admin');
+    Route::put('/cupboards/{id}', [CupboardController::class, 'update'])->middleware('role:admin');
+    Route::delete('/cupboards/{id}', [CupboardController::class, 'destroy'])->middleware('role:admin');
+
+    // Places
+    Route::get('/places', [PlaceController::class, 'index']);
+    Route::get('/places/{id}', [PlaceController::class, 'show']);
+
+    Route::post('/places', [PlaceController::class, 'store'])->middleware('role:admin');
+    Route::put('/places/{id}', [PlaceController::class, 'update'])->middleware('role:admin');
+    Route::delete('/places/{id}', [PlaceController::class, 'destroy'])->middleware('role:admin');
 
 });
