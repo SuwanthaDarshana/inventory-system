@@ -58,7 +58,7 @@ class BorrowController extends Controller
                 'borrower_name' => $request->borrower_name,
                 'contact' => $request->contact,
                 'quantity' => $request->quantity,
-                'borrow_date' => Carbon::today(),
+                'borrow_date' => Carbon::now(),
                 'expected_return_date' => $request->expected_return_date,
                 'status' => BorrowRecord::STATUS_BORROWED,
             ]);
@@ -108,7 +108,7 @@ class BorrowController extends Controller
             $item->save();
 
             $borrow->status = BorrowRecord::STATUS_RETURNED;
-            $borrow->return_date = Carbon::today();
+            $borrow->return_date = Carbon::now();
             $borrow->save();
 
             AuditLog::create([

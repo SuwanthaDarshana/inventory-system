@@ -14,6 +14,8 @@ export default function Cupboards() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
 
+ 
+
   const fetchCupboards = () => {
     api.get("/cupboards").then((res) => setCupboards(res.data));
   };
@@ -43,12 +45,28 @@ export default function Cupboards() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this cupboard? All its places and items will be removed.")) return;
+
+  // Delete confirmation modal state
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteId == null) return;
     try {
-      await api.delete(`/cupboards/${id}`);
-      toast.success("Cupboard deleted"); fetchCupboards();
-    } catch { toast.error("Failed to delete"); }
+      await api.delete(`/cupboards/${deleteId}`);
+      toast.success("Cupboard deleted");
+      fetchCupboards();
+    } catch {
+      toast.error("Failed to delete cupboard");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
   };
 
   return (
@@ -172,6 +190,16 @@ export default function Cupboards() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400">No cupboards found</div>
         )}
       </div>
+      {/* Delete Confirmation Modal (always rendered at root) */}
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Cupboard?">
+        <div className="space-y-4">
+          <p className="text-gray-700">Are you sure you want to delete this cupboard? All its places and items will be removed. This action cannot be undone.</p>
+          <div className="flex gap-3 pt-2">
+            <button onClick={confirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 rounded-xl transition-all cursor-pointer">Delete</button>
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-2.5 rounded-xl transition-all cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

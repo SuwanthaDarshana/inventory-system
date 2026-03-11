@@ -47,12 +47,28 @@ export default function Users() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this user?")) return;
+
+  // Delete confirmation modal state
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteId == null) return;
     try {
-      await api.delete(`/users/${id}`);
-      toast.success("User deleted"); fetchUsers();
-    } catch { toast.error("Failed to delete"); }
+      await api.delete(`/users/${deleteId}`);
+      toast.success("User deleted");
+      fetchUsers();
+    } catch {
+      toast.error("Failed to delete");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
   };
 
   const RoleBadge = ({ role }: { role: string }) => (
@@ -193,6 +209,16 @@ export default function Users() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400">No users found</div>
         )}
       </div>
+      {/* Delete Confirmation Modal (always rendered at root) */}
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete User?">
+        <div className="space-y-4">
+          <p className="text-gray-700">Are you sure you want to delete this user? This action cannot be undone.</p>
+          <div className="flex gap-3 pt-2">
+            <button onClick={confirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 rounded-xl transition-all cursor-pointer">Delete</button>
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-2.5 rounded-xl transition-all cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

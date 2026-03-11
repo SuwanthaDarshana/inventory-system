@@ -2,17 +2,37 @@ import { useEffect, useState } from "react";
 import api from "../api/api";
 import type { AuditLog } from "../types";
 
-const DetailView = ({ data }: { data: Record<string, unknown> | null }) => {
-  if (!data || typeof data !== "object") return <span className="text-gray-400 italic">—</span>;
-
-  const entries = Object.entries(data).filter(([k]) => !k.endsWith("_at") && k !== "id");
-
+const DetailView = ({ oldValue, newValue }: { oldValue: Record<string, unknown> | null, newValue: Record<string, unknown> | null }) => {
+  const oldEntries = oldValue && typeof oldValue === "object" ? Object.entries(oldValue).filter(([k]) => !k.endsWith("_at") && k !== "id") : [];
+  const newEntries = newValue && typeof newValue === "object" ? Object.entries(newValue).filter(([k]) => !k.endsWith("_at") && k !== "id") : [];
+  // Only show fields that changed (or all for CREATE/DELETE)
+  const changedKeys = Array.from(new Set([
+    ...oldEntries.map(([k, v]) => (newValue && newValue[k] !== v ? k : null)),
+    ...newEntries.map(([k, v]) => (oldValue && oldValue[k] !== v ? k : null)),
+  ].filter(Boolean)));
+  // If CREATE or DELETE, show all fields
+  const isCreate = !oldValue && newValue;
+  const isDelete = oldValue && !newValue;
+  const keysToShow = (isCreate || isDelete)
+    ? Array.from(new Set([...oldEntries.map(([k]) => k), ...newEntries.map(([k]) => k)]))
+    : changedKeys;
+  if (!keysToShow.length) return <span className="text-gray-400 italic">—</span>;
   return (
-    <div className="space-y-1">
-      {entries.map(([key, val]) => (
-        <div key={key} className="flex gap-2 text-xs">
-          <span className="text-gray-400 min-w-[70px] shrink-0">{key.replace(/_/g, " ")}:</span>
-          <span className="text-gray-700 break-all">{String(val ?? "—")}</span>
+    <div className="space-y-1 text-xs">
+      {keysToShow.map((key) => (
+        <div key={key} className="flex gap-2">
+          <span className="text-gray-400 min-w-17.5 shrink-0">{key.replace(/_/g, " ")}:</span>
+          {isCreate ? (
+            <span className="text-emerald-700">{String(newValue?.[key] ?? "—")}</span>
+          ) : isDelete ? (
+            <span className="text-red-600 line-through">{String(oldValue?.[key] ?? "—")}</span>
+          ) : (
+            <span>
+              <span className="text-red-600">{String(oldValue?.[key] ?? "—")}</span>
+              <span className="mx-1 text-gray-400">→</span>
+              <span className="text-emerald-700">{String(newValue?.[key] ?? "—")}</span>
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -118,7 +138,7 @@ export default function AuditLogs() {
                 </td>
                 <td className="px-5 py-4 text-sm text-gray-500 font-mono">#{log.record_id}</td>
                 <td className="px-5 py-4 max-w-sm">
-                  <DetailView data={(log.new_value || log.old_value) as Record<string, unknown> | null} />
+                  <DetailView oldValue={log.old_value as Record<string, unknown> | null} newValue={log.new_value as Record<string, unknown> | null} />
                 </td>
               </tr>
             ))}
@@ -156,7 +176,7 @@ export default function AuditLogs() {
               <div><span className="text-gray-400">ID:</span> <span className="text-gray-700 font-mono">#{log.record_id}</span></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <DetailView data={(log.new_value || log.old_value) as Record<string, unknown> | null} />
+              <DetailView oldValue={log.old_value as Record<string, unknown> | null} newValue={log.new_value as Record<string, unknown> | null} />
             </div>
           </div>
         ))}

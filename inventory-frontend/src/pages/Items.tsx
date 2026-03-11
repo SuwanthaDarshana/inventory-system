@@ -6,6 +6,7 @@ import type { Item, Place } from "../types";
 
 const inputClass = "w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all";
 
+
 export default function Items() {
   const [items, setItems] = useState<Item[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -20,6 +21,10 @@ export default function Items() {
   const [description, setDescription] = useState("");
   const [placeId, setPlaceId] = useState("");
   const [image, setImage] = useState<File | null>(null);
+
+  // For delete confirmation popup
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchItems = () => {
     api.get("/items").then((res) => setItems(res.data));
@@ -63,12 +68,24 @@ export default function Items() {
     }
   };
 
+
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteId == null) return;
     try {
-      await api.delete(`/items/${id}`);
-      toast.success("Item deleted"); fetchItems();
-    } catch { toast.error("Failed to delete item"); }
+      await api.delete(`/items/${deleteId}`);
+      toast.success("Item deleted");
+      fetchItems();
+    } catch {
+      toast.error("Failed to delete item");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
   };
 
   const filtered = items.filter((i) =>
@@ -207,6 +224,17 @@ export default function Items() {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Item?">
+        <div className="space-y-4">
+          <p className="text-gray-700">Are you sure you want to delete this item? This action cannot be undone.</p>
+          <div className="flex gap-3 pt-2">
+            <button onClick={confirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 rounded-xl transition-all cursor-pointer">Delete</button>
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-2.5 rounded-xl transition-all cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Cards - Mobile */}
       <div className="md:hidden space-y-3">

@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // 4. Custom hook — use this in any component to access auth state
 //    Example: const { user, isAdmin, logout } = useAuth();
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

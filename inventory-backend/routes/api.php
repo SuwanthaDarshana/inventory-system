@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ItemController;
@@ -19,6 +20,16 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
+    // User info for session restore
+    Route::get('/user', function (Request $request) {
+        $user = $request->user();
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ];
+    });
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);

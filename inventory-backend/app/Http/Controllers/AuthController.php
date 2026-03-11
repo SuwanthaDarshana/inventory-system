@@ -24,13 +24,17 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->tokens()->delete(); // delete old tokens
 
         // create new token
         $token = $user->createToken('inventory-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user->makeHidden('password'),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
             'token' => $token,
         ]);
     }
