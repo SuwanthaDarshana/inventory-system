@@ -1,16 +1,18 @@
-
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import toast from "react-hot-toast";
+import Modal from "../components/Modal";
 import type { Item, Place } from "../types";
+
+const inputClass = "w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all";
 
 export default function Items() {
   const [items, setItems] = useState<Item[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [search, setSearch] = useState("");
 
-  // Form state
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -29,50 +31,31 @@ export default function Items() {
   }, []);
 
   const resetForm = () => {
-    setName("");
-    setCode("");
-    setQuantity(1);
-    setSerialNumber("");
-    setDescription("");
-    setPlaceId("");
-    setImage(null);
-    setEditingItem(null);
-    setShowForm(false);
+    setName(""); setCode(""); setQuantity(1); setSerialNumber(""); setDescription(""); setPlaceId(""); setImage(null); setEditingItem(null); setShowForm(false);
   };
 
   const openEdit = (item: Item) => {
-    setEditingItem(item);
-    setName(item.name);
-    setCode(item.code);
-    setQuantity(item.quantity);
-    setSerialNumber(item.serial_number || "");
-    setDescription(item.description || "");
-    setPlaceId(String(item.place_id));
-    setShowForm(true);
+    setEditingItem(item); setName(item.name); setCode(item.code); setQuantity(item.quantity);
+    setSerialNumber(item.serial_number || ""); setDescription(item.description || ""); setPlaceId(String(item.place_id)); setShowForm(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const formData = new FormData();
-      formData.append("name", name);
-      formData.append("code", code);
-      formData.append("quantity", String(quantity));
-      formData.append("serial_number", serialNumber);
-      formData.append("description", description);
-      formData.append("place_id", placeId);
+      formData.append("name", name); formData.append("code", code); formData.append("quantity", String(quantity));
+      formData.append("serial_number", serialNumber); formData.append("description", description); formData.append("place_id", placeId);
       if (image) formData.append("image", image);
 
       if (editingItem) {
-        formData.append("_method", "PUT"); // Laravel uses _method for PUT with FormData
+        formData.append("_method", "PUT");
         await api.post(`/items/${editingItem.id}`, formData);
         toast.success("Item updated");
       } else {
         await api.post("/items", formData);
         toast.success("Item created");
       }
-      fetchItems();
-      resetForm();
+      fetchItems(); resetForm();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to save item");
@@ -83,111 +66,177 @@ export default function Items() {
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
       await api.delete(`/items/${id}`);
-      toast.success("Item deleted");
-      fetchItems();
-    } catch {
-      toast.error("Failed to delete item");
-    }
+      toast.success("Item deleted"); fetchItems();
+    } catch { toast.error("Failed to delete item"); }
   };
+
+  const filtered = items.filter((i) =>
+    i.name.toLowerCase().includes(search.toLowerCase()) ||
+    i.code.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Items</h1>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Items</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{items.length} total items</p>
+        </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-5 rounded-xl transition-all shadow-sm cursor-pointer"
         >
-          + Add Item
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Add Item
         </button>
       </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{editingItem ? "Edit Item" : "Add Item"}</h2>
-            <div className="space-y-3">
-              <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required
-                className="w-full border rounded p-2" />
-              <input type="text" placeholder="Code" value={code} onChange={(e) => setCode(e.target.value)} required
-                className="w-full border rounded p-2" />
-              <input type="number" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} min={0} required
-                className="w-full border rounded p-2" />
-              <input type="text" placeholder="Serial Number" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)}
-                className="w-full border rounded p-2" />
-              <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)}
-                className="w-full border rounded p-2" />
-              <select value={placeId} onChange={(e) => setPlaceId(e.target.value)} required className="w-full border rounded p-2">
-                <option value="">Select Place</option>
-                {places.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.cupboard?.name})</option>
-                ))}
-              </select>
-              <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)}
-                className="w-full border rounded p-2" />
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
-                {editingItem ? "Update" : "Create"}
-              </button>
-              <button type="button" onClick={resetForm} className="bg-gray-300 hover:bg-gray-400 py-2 px-4 rounded">
-                Cancel
-              </button>
-            </div>
-          </form>
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input
+            type="text" placeholder="Search items by name or code..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
         </div>
-      )}
+      </div>
 
-      {/* Items Table */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-3">Code</th>
-              <th className="p-3">Name</th>
-              <th className="p-3">Qty</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Place</th>
-              <th className="p-3">Actions</th>
+      {/* Modal */}
+      <Modal open={showForm} onClose={resetForm} title={editingItem ? "Edit Item" : "Add New Item"}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} placeholder="Item name" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Code</label>
+              <input type="text" value={code} onChange={(e) => setCode(e.target.value)} required className={inputClass} placeholder="ITM-001" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Quantity</label>
+              <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} min={0} required className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Serial Number</label>
+            <input type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className={inputClass} placeholder="Optional" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="Optional" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Place</label>
+            <select value={placeId} onChange={(e) => setPlaceId(e.target.value)} required className={inputClass}>
+              <option value="">Select a place</option>
+              {places.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.cupboard?.name})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Image</label>
+            <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className={inputClass} />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all cursor-pointer">
+              {editingItem ? "Update" : "Create"}
+            </button>
+            <button type="button" onClick={resetForm} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-2.5 rounded-xl transition-all cursor-pointer">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Table - Desktop */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+              <th className="px-6 py-3.5">Code</th>
+              <th className="px-6 py-3.5">Name</th>
+              <th className="px-6 py-3.5">Qty</th>
+              <th className="px-6 py-3.5">Status</th>
+              <th className="px-6 py-3.5">Place</th>
+              <th className="px-6 py-3.5">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="p-3 font-mono text-sm">{item.code}</td>
-                <td className="p-3">{item.name}</td>
-                <td className="p-3">{item.quantity}</td>
-                <td className="p-3">
-                  <StatusBadge status={item.status} />
+          <tbody className="divide-y divide-gray-50">
+            {filtered.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-6 py-3.5 font-mono text-sm text-indigo-600">{item.code}</td>
+                <td className="px-6 py-3.5 font-medium text-gray-900">{item.name}</td>
+                <td className="px-6 py-3.5">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-sm font-medium text-gray-700">{item.quantity}</span>
                 </td>
-                <td className="p-3 text-sm text-gray-500">{item.place?.name}</td>
-                <td className="p-3 flex gap-2">
-                  <button onClick={() => openEdit(item)} className="text-blue-600 hover:underline text-sm">Edit</button>
-                  <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:underline text-sm">Delete</button>
+                <td className="px-6 py-3.5"><StatusBadge status={item.status} /></td>
+                <td className="px-6 py-3.5 text-sm text-gray-500">{item.place?.name}</td>
+                <td className="px-6 py-3.5">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => openEdit(item)} className="p-2 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer" title="Edit">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {items.length === 0 && (
-              <tr><td colSpan={6} className="p-4 text-center text-gray-500">No items found</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">No items found</td></tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Cards - Mobile */}
+      <div className="md:hidden space-y-3">
+        {filtered.map((item) => (
+          <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="font-medium text-gray-900">{item.name}</p>
+                <p className="text-sm font-mono text-indigo-600">{item.code}</p>
+              </div>
+              <StatusBadge status={item.status} />
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-3 text-sm text-gray-500">
+                <span>Qty: <span className="font-medium text-gray-700">{item.quantity}</span></span>
+                <span>{item.place?.name}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => openEdit(item)} className="p-2 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 cursor-pointer">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+                <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 cursor-pointer">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400">No items found</div>
+        )}
       </div>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    IN_STORE: "bg-green-100 text-green-800",
-    BORROWED: "bg-yellow-100 text-yellow-800",
-    DAMAGED: "bg-red-100 text-red-800",
-    MISSING: "bg-gray-100 text-gray-800",
+  const styles: Record<string, string> = {
+    IN_STORE: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    BORROWED: "bg-amber-50 text-amber-700 ring-amber-600/20",
+    DAMAGED: "bg-red-50 text-red-700 ring-red-600/20",
+    MISSING: "bg-gray-50 text-gray-600 ring-gray-500/20",
   };
   return (
-    <span className={`text-xs px-2 py-1 rounded-full font-medium ${colors[status] || "bg-gray-100"}`}>
-      {status}
+    <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-full font-medium ring-1 ring-inset ${styles[status] || "bg-gray-50 ring-gray-500/20"}`}>
+      {status.replace("_", " ")}
     </span>
   );
 }
