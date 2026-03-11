@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\AuditLog;
 
 class UserController extends Controller
@@ -20,24 +21,27 @@ class UserController extends Controller
             'role' => 'required|in:admin,staff'
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role
+            ]);
 
-        // Log the creation in AuditLog
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'CREATE',
-            'table_name' => 'users',
-            'record_id' => $user->id,
-            'old_value' => null,
-            'new_value' => $user->toJson()
-        ]);
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'CREATE',
+                'table_name' => 'users',
+                'record_id' => $user->id,
+                'old_value' => null,
+                'new_value' => $user->makeHidden('password')->toArray()
+            ]);
 
-        return response()->json($user, 201);
+            return $user;
+        });
+
+        return response()->json($user->makeHidden('password'), 201);
     }
 
     // List all users (Admin only)
@@ -56,7 +60,6 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $old = $user->toJson();
 
         $request->validate([
             'name' => 'sometimes|required|string',
@@ -65,22 +68,27 @@ class UserController extends Controller
             'role' => 'sometimes|required|in:admin,staff'
         ]);
 
-        if ($request->password) {
-            $request->merge(['password' => Hash::make($request->password)]);
-        }
+        DB::transaction(function () use ($user, $request) {
+            $old = $user->makeHidden('password')->toArray();
 
-        $user->update($request->all());
+            $data = $request->only(['name', 'email', 'role']);
+            if ($request->has('password')) {
+                $data['password'] = Hash::make($request->password);
+            }
 
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'UPDATE',
-            'table_name' => 'users',
-            'record_id' => $user->id,
-            'old_value' => $old,
-            'new_value' => $user->toJson()
-        ]);
+            $user->update($data);
 
-        return response()->json($user);
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'UPDATE',
+                'table_name' => 'users',
+                'record_id' => $user->id,
+                'old_value' => $old,
+                'new_value' => $user->makeHidden('password')->toArray()
+            ]);
+        });
+
+        return response()->json($user->makeHidden('password'));
     }
 
     // Delete user (Admin only)
@@ -88,16 +96,18 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'DELETE',
-            'table_name' => 'users',
-            'record_id' => $user->id,
-            'old_value' => $user->toJson(),
-            'new_value' => null
-        ]);
+        DB::transaction(function () use ($user) {
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'DELETE',
+                'table_name' => 'users',
+                'record_id' => $user->id,
+                'old_value' => $user->makeHidden('password')->toArray(),
+                'new_value' => null
+            ]);
 
-        $user->delete();
+            $user->delete();
+        });
 
         return response()->json(['message' => 'User deleted']);
     }

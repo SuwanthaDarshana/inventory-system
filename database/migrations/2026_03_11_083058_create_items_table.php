@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('items', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // Skipped: items table already created in earlier migration
     }
 
     /**

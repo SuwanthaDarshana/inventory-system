@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audit_logs', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // Skipped: audit_logs table already created in earlier migration
     }
 
     /**

@@ -24,15 +24,21 @@ class AuthController extends Controller
             ]);
         }
 
-        //Delete old tokens
-        $user->tokens()->delete();
+        $user->tokens()->delete(); // delete old tokens
 
-        //Create new token
+        // create new token
         $token = $user->createToken('inventory-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $user->makeHidden('password'),
             'token' => $token,
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }

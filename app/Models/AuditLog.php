@@ -15,6 +15,11 @@ class AuditLog extends Model
         'new_value',
     ];
 
+    protected $casts = [
+        'old_value' => 'array',
+        'new_value' => 'array',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

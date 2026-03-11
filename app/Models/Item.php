@@ -11,7 +11,7 @@ class Item extends Model
         'code',
         'quantity',
         'serial_number',
-        'image_path',
+        'image',
         'description',
         'place_id',
         'status',

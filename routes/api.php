@@ -6,7 +6,8 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\BorrowController;
 use App\Http\Controllers\CupboardController;
 use App\Http\Controllers\PlaceController;
-use App\Http\Controllers\UserController; // ← Add this
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuditLogController;
 
 // Test Route
 Route::get('/test', function () {
@@ -19,10 +20,17 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout']);
+
     // Items
     Route::apiResource('items', ItemController::class);
+    Route::post('/items/{id}/increment-quantity', [ItemController::class, 'incrementQuantity']);
+    Route::post('/items/{id}/decrement-quantity', [ItemController::class, 'decrementQuantity']);
 
     // Borrow System
+    Route::get('/borrow-records', [BorrowController::class, 'index']);
+    Route::get('/borrow-records/{id}', [BorrowController::class, 'show']);
     Route::post('/borrow', [BorrowController::class, 'borrow']);
     Route::post('/return', [BorrowController::class, 'returnItem']);
 
@@ -39,6 +47,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/places', [PlaceController::class, 'store'])->middleware('role:admin');
     Route::put('/places/{id}', [PlaceController::class, 'update'])->middleware('role:admin');
     Route::delete('/places/{id}', [PlaceController::class, 'destroy'])->middleware('role:admin');
+
+    // Audit Logs (Admin Only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
+    });
 
     // Users (Admin Only)
     Route::middleware(['role:admin'])->group(function () {
