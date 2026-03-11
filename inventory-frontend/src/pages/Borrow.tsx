@@ -1,5 +1,19 @@
 
 import { useEffect, useState } from "react";
+
+// Helper to format date strings
+function formatDate(dateStr?: string | null) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 import api from "../api/api";
 import toast from "react-hot-toast";
 import type { BorrowRecord, Item } from "../types";
@@ -55,7 +69,7 @@ export default function Borrow() {
 
   const handleReturn = async (recordId: number) => {
     try {
-      await api.post("/return", { borrow_record_id: recordId });
+      await api.post("/return", { borrow_id: recordId });
       toast.success("Item returned");
       fetchRecords();
       api.get("/items").then((res) => setItems(res.data));
@@ -170,8 +184,8 @@ export default function Borrow() {
                         {r.quantity}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{r.borrow_date}</td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{r.expected_return_date}</td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{formatDate(r.borrow_date)}</td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{formatDate(r.expected_return_date)}</td>
                     <td className="px-5 py-4">
                       <button
                         onClick={() => handleReturn(r.id)}
@@ -209,8 +223,8 @@ export default function Borrow() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div><span className="text-gray-400">Contact:</span> <span className="text-gray-700">{r.contact}</span></div>
                   <div><span className="text-gray-400">Qty:</span> <span className="text-gray-700">{r.quantity}</span></div>
-                  <div><span className="text-gray-400">Borrowed:</span> <span className="text-gray-700">{r.borrow_date}</span></div>
-                  <div><span className="text-gray-400">Return by:</span> <span className="text-gray-700">{r.expected_return_date}</span></div>
+                  <div><span className="text-gray-400">Borrowed:</span> <span className="text-gray-700">{formatDate(r.borrow_date)}</span></div>
+                  <div><span className="text-gray-400">Return by:</span> <span className="text-gray-700">{formatDate(r.expected_return_date)}</span></div>
                 </div>
                 <button
                   onClick={() => handleReturn(r.id)}
@@ -248,10 +262,10 @@ export default function Borrow() {
                     <td className="px-5 py-4 font-medium text-gray-900">{r.item?.name}</td>
                     <td className="px-5 py-4 text-gray-700">{r.borrower_name}</td>
                     <td className="px-5 py-4 text-gray-500">{r.quantity}</td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{r.borrow_date}</td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{formatDate(r.borrow_date)}</td>
                     <td className="px-5 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                        {r.return_date}
+                        {formatDate(r.return_date)}
                       </span>
                     </td>
                   </tr>

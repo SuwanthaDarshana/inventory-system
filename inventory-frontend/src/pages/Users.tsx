@@ -133,7 +133,7 @@ export default function Users() {
               <tr key={u.id} className="hover:bg-indigo-50/30 transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white ${u.role === "admin" ? "bg-gradient-to-br from-purple-500 to-indigo-600" : "bg-gradient-to-br from-sky-400 to-blue-500"}`}>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white ${u.role === "admin" ? "bg-linear-to-br from-purple-500 to-indigo-600" : "bg-linear-to-br from-sky-400 to-blue-500"}`}>
                       {u.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-gray-900">{u.name}</span>
@@ -169,7 +169,7 @@ export default function Users() {
           <div key={u.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white ${u.role === "admin" ? "bg-gradient-to-br from-purple-500 to-indigo-600" : "bg-gradient-to-br from-sky-400 to-blue-500"}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white ${u.role === "admin" ? "bg-linear-to-br from-purple-500 to-indigo-600" : "bg-linear-to-br from-sky-400 to-blue-500"}`}>
                   {u.name.charAt(0).toUpperCase()}
                 </div>
                 <div>

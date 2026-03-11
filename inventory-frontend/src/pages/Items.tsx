@@ -52,6 +52,7 @@ export default function Items() {
         await api.post(`/items/${editingItem.id}`, formData);
         toast.success("Item updated");
       } else {
+        formData.append("status", "IN_STORE");
         await api.post("/items", formData);
         toast.success("Item created");
       }
@@ -155,6 +156,7 @@ export default function Items() {
         <table className="w-full">
           <thead>
             <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+              <th className="px-6 py-3.5">Image</th>
               <th className="px-6 py-3.5">Code</th>
               <th className="px-6 py-3.5">Name</th>
               <th className="px-6 py-3.5">Qty</th>
@@ -166,6 +168,20 @@ export default function Items() {
           <tbody className="divide-y divide-gray-50">
             {filtered.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-6 py-3.5">
+                  {item.image ? (
+                    <img
+                      src={`/storage/${item.image}`}
+                      alt={item.name}
+                      className="w-14 h-14 object-cover rounded-lg border border-gray-200 bg-gray-50"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7M3 7a4 4 0 014-4h10a4 4 0 014 4M3 7h18" /></svg>
+                    </div>
+                  )}
+                </td>
                 <td className="px-6 py-3.5 font-mono text-sm text-indigo-600">{item.code}</td>
                 <td className="px-6 py-3.5 font-medium text-gray-900">{item.name}</td>
                 <td className="px-6 py-3.5">
@@ -196,19 +212,31 @@ export default function Items() {
       <div className="md:hidden space-y-3">
         {filtered.map((item) => (
           <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <p className="font-medium text-gray-900">{item.name}</p>
+            <div className="flex items-start gap-3 mb-2">
+              {item.image ? (
+                <img
+                  src={`/storage/${item.image}`}
+                  alt={item.name}
+                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 bg-gray-50"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7M3 7a4 4 0 014-4h10a4 4 0 014 4M3 7h18" /></svg>
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <StatusBadge status={item.status} />
+                </div>
                 <p className="text-sm font-mono text-indigo-600">{item.code}</p>
+                <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
+                  <span>Qty: <span className="font-medium text-gray-700">{item.quantity}</span></span>
+                  <span>{item.place?.name}</span>
+                </div>
               </div>
-              <StatusBadge status={item.status} />
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-3 text-sm text-gray-500">
-                <span>Qty: <span className="font-medium text-gray-700">{item.quantity}</span></span>
-                <span>{item.place?.name}</span>
-              </div>
-              <div className="flex items-center gap-1">
+              <div className="flex flex-col gap-1 justify-between">
                 <button onClick={() => openEdit(item)} className="p-2 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 cursor-pointer">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 </button>
