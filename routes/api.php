@@ -28,6 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cupboards
     Route::apiResource('cupboards', CupboardController::class);
+    Route::get('/cupboards', [CupboardController::class, 'index']);
+     Route::post('/cupboards', [CupboardController::class, 'store'])
+        ->middleware('role:admin');
 
     // Places
     Route::apiResource('places', PlaceController::class);
