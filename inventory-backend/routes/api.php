@@ -11,7 +11,7 @@ use App\Http\Controllers\AuditLogController;
 
 // Test Route
 Route::get('/test', function () {
-    return response()->json(['message' => 'API working fine']);
+    return response()->json(['message' => 'API working fine dude hehe']);
 });
 
 // Authentication

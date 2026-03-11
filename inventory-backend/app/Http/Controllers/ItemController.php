@@ -7,6 +7,7 @@ use App\Models\Item;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
 {
@@ -26,10 +27,17 @@ class ItemController extends Controller
             'quantity' => 'required|integer|min:0',
             'place_id' => 'required|exists:places,id',
             'status' => 'required|in:IN_STORE,BORROWED,DAMAGED,MISSING',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $item = DB::transaction(function () use ($request) {
-            $item = Item::create($request->all());
+            $data = $request->except('image');
+
+            if ($request->hasFile('image')) {
+                $data['image'] = $request->file('image')->store('items', 'public');
+            }
+
+            $item = Item::create($data);
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'CREATE',
@@ -61,10 +69,20 @@ class ItemController extends Controller
             'quantity' => 'sometimes|required|integer|min:0',
             'place_id' => 'sometimes|required|exists:places,id',
             'status' => 'sometimes|required|in:IN_STORE,BORROWED,DAMAGED,MISSING',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         DB::transaction(function () use ($item, $request, $old) {
-            $item->update($request->all());
+            $data = $request->except('image');
+
+            if ($request->hasFile('image')) {
+                if ($item->image) {
+                    Storage::disk('public')->delete($item->image);
+                }
+                $data['image'] = $request->file('image')->store('items', 'public');
+            }
+
+            $item->update($data);
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'UPDATE',
