@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class ItemController extends Controller
 {
 
-// list all items
+    // list all items
     public function index()
     {
         return Item::with('place')->get();
@@ -109,6 +109,14 @@ class ItemController extends Controller
                 'old_value' => $item->toArray(),
                 'new_value' => null,
             ]);
+
+            // Delete related borrow records to fix foreign key constraint errors
+            \App\Models\BorrowRecord::where('item_id', $item->id)->delete();
+
+            if ($item->image) {
+                Storage::disk('public')->delete($item->image);
+            }
+
             $item->delete();
         });
 

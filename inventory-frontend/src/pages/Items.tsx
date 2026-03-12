@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../api/api";
+import api, { BACKEND_URL } from "../api/api";
 import toast from "react-hot-toast";
 import Modal from "../components/Modal";
 import type { Item, Place } from "../types";
@@ -188,13 +188,13 @@ export default function Items() {
                 <td className="px-6 py-3.5">
                   {item.image ? (
                     <img
-                      src={`/storage/${item.image}`}
+                      src={`${BACKEND_URL}/storage/${item.image}`}
                       alt={item.name}
-                      className="w-14 h-14 object-cover rounded-lg border border-gray-200 bg-gray-50"
+                      className="w-14 h-14 shrink-0 object-contain p-1 rounded-lg border border-gray-200 bg-gray-50"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-14 h-14 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
+                    <div className="w-14 h-14 shrink-0 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
                       <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7M3 7a4 4 0 014-4h10a4 4 0 014 4M3 7h18" /></svg>
                     </div>
                   )}
@@ -243,13 +243,13 @@ export default function Items() {
             <div className="flex items-start gap-3 mb-2">
               {item.image ? (
                 <img
-                  src={`/storage/${item.image}`}
+                  src={`${BACKEND_URL}/storage/${item.image}`}
                   alt={item.name}
-                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 bg-gray-50"
+                  className="w-16 h-16 shrink-0 object-contain p-1 rounded-lg border border-gray-200 bg-gray-50"
                   loading="lazy"
                 />
               ) : (
-                <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
+                <div className="w-16 h-16 shrink-0 flex items-center justify-center rounded-lg bg-gray-100 text-gray-300 border border-gray-200">
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7M3 7a4 4 0 014-4h10a4 4 0 014 4M3 7h18" /></svg>
                 </div>
               )}
