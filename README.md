@@ -108,12 +108,3 @@ npm run dev
 
 ---
 
-## 📄 Documentation
-
-Additional technical documentation can be found in the root directory:
-- `Architecture_and_Implementation.pdf`: Explains architecture decisions, database schema justification, and concurrency handling.
-- `database_schema.pdf`: Contains the visual ER Diagram and table breakdowns.
-- `AI_Usage_Document.pdf`: Outlines the usage of AI tooling during development.
-
----
-*Developed as an interview project for Ceyntics Systems (Pvt) Ltd.*
