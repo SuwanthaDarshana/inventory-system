@@ -1,6 +1,6 @@
 # Inventory System Database Schema Design
 
-This document outlines the database tables, fields, and relationships for the Inventory Management System. The database relies on standard relational structures with foreign key constraints to maintain data integrity.
+This document outlines the database tables, fields, and relationships for the Inventory Management System. The database relies on standard relational structures with foreign key constraints to maintain data integrity..
 
 ## Entity-Relationship Diagram
 
